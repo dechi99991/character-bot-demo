@@ -169,10 +169,11 @@ if prompt := st.chat_input("話しかけてみてください"):
         placeholder = st.empty()
         full_response = ""
 
-        response = st.session_state.chat.send_message(prompt, stream=True)
-        for chunk in response:
-            full_response += chunk.text
-            placeholder.markdown(full_response + "▌")
+        with st.spinner("お茶を淹れています...🍵"):
+            response = st.session_state.chat.send_message(prompt, stream=True)
+            for chunk in response:
+                full_response += chunk.text
+                placeholder.markdown(full_response + "▌")
 
         placeholder.markdown(full_response)
 
