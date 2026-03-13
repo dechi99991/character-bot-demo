@@ -141,9 +141,23 @@ model = genai.GenerativeModel(
 # Streamlit UI
 # ============================================================
 
-st.set_page_config(page_title="tayumano チャットBot", page_icon="🍵")
-st.title("🍵 お茶好きの兄ちゃんと話す")
-st.caption("tayumano — たゆたう、間の時間")
+st.set_page_config(page_title="tayumano チャットBot", page_icon="🍵", layout="wide")
+
+# iframe埋め込み用: ヘッダー・フッター・メニューをすべて非表示
+st.markdown("""
+<style>
+    header, footer, .stMainMenu, .stAppDeployButton,
+    div[data-testid="stDecoration"],
+    div[data-testid="stToolbar"],
+    div[data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+    .stMainBlockContainer {
+        padding-top: 1rem !important;
+        padding-bottom: 0 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # セッション初期化
 if "messages" not in st.session_state:
