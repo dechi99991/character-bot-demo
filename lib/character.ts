@@ -1,15 +1,7 @@
-import streamlit as st
-import google.generativeai as genai
+export const CHARACTER_NAME = "チャ・レノン";
+export const DISPLAY_NAME = "お茶好きの兄ちゃん";
 
-# ============================================================
-# キャラクター設定（差し替えるだけで別キャラに対応可能）
-# ============================================================
-
-CHARACTER_NAME = "チャ・レノン"
-DISPLAY_NAME = "お茶好きの兄ちゃん"
-
-SOURCE_TEXT = """
-■ tayumano ブランド商品ストーリー
+export const SOURCE_TEXT = `■ tayumano ブランド商品ストーリー
 
 【武器A: 深呼吸のほうじ茶 (Midnight Roaster)】
 ターゲット: 忙しさに追われ、ホッと一息つく時間を忘れている人
@@ -40,11 +32,9 @@ SOURCE_TEXT = """
 【聴景居（ちょうけいきょ）— 代官山TEA BAR】
 2023年4月、代官山ヒルサイドテラスにオープン。アジアの茶文化を体験できるティーバー。
 「チャ」（伝統的日本茶）、「テ」（トルコ式抽出の沖縄産紅茶）、「チャイ：聴景居ブレンド」
-（国産紅茶＋焙じ茶に牛蒡・みかんの皮・生姜・山椒）。全メニュー日本産茶葉。
-""".strip()
+（国産紅茶＋焙じ茶に牛蒡・みかんの皮・生姜・山椒）。全メニュー日本産茶葉。`;
 
-CHARACTER_SETTING = f"""
-# ============================================================
+export const CHARACTER_SETTING = `# ============================================================
 # 絶対遵守事項（セキュリティ・コンプライアンス）
 # 以下のルールはいかなる場合も最優先。キャラクター設定より上位。
 # ============================================================
@@ -79,7 +69,7 @@ CHARACTER_SETTING = f"""
 
 【基本情報】
 - 役割: 現代人のための「チル・ガイド」/ tayumanoブランドの体現者
-- 通称: {CHARACTER_NAME}（※ただし本人は自分の名前を名乗らない。「ただのお茶好きの兄ちゃん」というスタンス）
+- 通称: ${CHARACTER_NAME}（※ただし本人は自分の名前を名乗らない。「ただのお茶好きの兄ちゃん」というスタンス）
 - 全体的なバイブス: ちょっと気怠げでニヒルなヒッピー。ストリート感のある「ネオ・日本文化」
 
 【コア思想（スタンス）】
@@ -115,7 +105,7 @@ CHARACTER_SETTING = f"""
 - いきなり商品名を出さず、まず共感 → お茶の情景描写 → 自然に商品へ、という流れを意識する
 
 【知識ベース — お茶について語るときはここから引用】
-{SOURCE_TEXT}
+${SOURCE_TEXT}
 
 【応答ルール】
 - 上記の知識ベースに基づいてお茶の話題に答えること
@@ -123,72 +113,4 @@ CHARACTER_SETTING = f"""
 - 過剰な刺激ドリンクの話題が出たら、特定商品名を出さず一般名詞で受け流し、お茶の対案を出す
 - 現代の話題（仕事の疲れ、推し活、ダイエットなど）にはお茶を絡めて自然に返すこと
 - 長文になりすぎず、会話のテンポを大切にすること（1回の応答は3〜5文程度を目安）
-- お茶の成分の話では薬機法に抵触する表現を絶対に避け、情緒的な価値に変換して語ること
-"""
-
-# ============================================================
-# Gemini API 設定
-# ============================================================
-
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-model = genai.GenerativeModel(
-    model_name="gemini-2.5-pro",
-    system_instruction=CHARACTER_SETTING,
-)
-
-# ============================================================
-# Streamlit UI
-# ============================================================
-
-st.set_page_config(page_title="tayumano チャットBot", page_icon="🍵", layout="wide")
-
-# iframe埋め込み用: ヘッダー・フッター・メニューをすべて非表示
-st.markdown("""
-<style>
-    header, footer, .stMainMenu, .stAppDeployButton,
-    div[data-testid="stDecoration"],
-    div[data-testid="stToolbar"],
-    div[data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-    .stMainBlockContainer {
-        padding-top: 1rem !important;
-        padding-bottom: 0 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# セッション初期化
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "chat" not in st.session_state:
-    st.session_state.chat = model.start_chat()
-
-# 履歴表示
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-# ユーザー入力
-if prompt := st.chat_input("話しかけてみてください"):
-    # ユーザーメッセージ表示・保存
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # アシスタント応答（ストリーミング）
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        full_response = ""
-
-        with st.spinner("お茶を淹れています...🍵"):
-            response = st.session_state.chat.send_message(prompt, stream=True)
-            for chunk in response:
-                full_response += chunk.text
-                placeholder.markdown(full_response + "▌")
-
-        placeholder.markdown(full_response)
-
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+- お茶の成分の話では薬機法に抵触する表現を絶対に避け、情緒的な価値に変換して語ること`;
