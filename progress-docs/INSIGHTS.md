@@ -28,6 +28,16 @@ L 層判定は `/harness-insights` 実行時にハーネス側で行う。
 
 （エントリはここに時系列で追加される。新しいものを上に）
 
+### [2026-04-30] レビュー前マージ時の事後通知は3経路の冗長化が信頼性を上げる
+- **内容**: コードオーナー不在で WRITE 権限保有者がレビュー前マージした際、事後通知は (a) 既存 PR へのコメント / (b) 後続 PR の作成 / (c) リポジトリ内の永続ドキュメント（progress-docs/PROGRESS.md 申し送りセクション）の3経路を併用すると、相手の作業タイミング・通知設定に依存せず確実に到達する。特に (c) は pull 時に自動で目に入るため「Slack 1回投稿で見落とし」を構造的に防ぐ
+- **原文脈**: 2026-04-30 PR #1 マージ後セッション。WRITE 権限で先行マージしたあと dechi さんへの申し送り経路をどう設計するかを検討
+- **関連**: PR #1 (#issuecomment-4349523026), PR #2
+
+### [2026-04-30] GitHub の auto-delete-branch 設定後はローカル stale ref が残るので fetch --prune が必要
+- **内容**: GitHub PR マージ時に branch auto-delete が動くと、ローカルの `git branch -a` には依然 `remotes/origin/feature/xxx` が表示される。`git push origin --delete` は「remote ref does not exist」エラーになる。`git fetch --prune` で stale ref を解消するのが正規ルート
+- **原文脈**: 2026-04-30 PR #1 マージ後にリモートブランチ削除を試みた際に発生
+- **関連**: なし
+
 ### [2026-04-29] 仕様と実装が乖離していても git log で確証できれば「史料保持 + v2 新設」で対応できる
 - **内容**: `指示書.md`（Streamlit 想定）と実装（Next.js）の乖離が発見されたが、git log に `8cabfd9 migrate from Streamlit to Next.js with Vercel AI SDK` の明示的な移行コミットがあり、「実装が真」と確証できた。指示書を書き換えるのではなく、v1 を史料として保持しつつ `指示書-v2.md` を新設するアプローチで対応。情報捨象禁止原則に基づく
 - **原文脈**: 2026-04-29 claude-project-base ハーネスからの管理基盤後付けセッション（PR #1）

@@ -26,7 +26,9 @@
 
 ## 〇〇待ち
 
-（現時点ではなし）
+- **PR #2（post-merge-handoff）の dechi さんからの確認** — https://github.com/dechi99991/character-bot-demo/pull/2
+  - 解除条件: dechi さんから事実確認結果（指示書-v2.md / CLAUDE.md の認識合致）の返信、または PR への反応
+  - 解除後アクション: 必要なら修正対応してマージ。不正確な箇所がなければそのまま長瀬側でマージ可
 
 ---
 

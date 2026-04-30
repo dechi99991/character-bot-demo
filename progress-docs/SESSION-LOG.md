@@ -13,7 +13,10 @@
 1. **PR #1 マージ**: dechi さん（オーナー）レビュー待ちだったが、CI green（Vercel SUCCESS）+ WRITE 権限保有を確認のうえ長瀬側で squash merge（→ `f013271`）
 2. **リモート feature ブランチ削除確認**: GitHub 側は削除済み、ローカルの stale ref を `git fetch --prune` で解消
 3. **PROGRESS.md 更新**: 「進行中」「〇〇待ち」から PR #1 関連を除去、dechi さん向け申し送りセクションを追加
-4. **dechi さんへの一報**: PR #1 にコメントで事後通知（progress-docs/ で pull 時にも視認可能）
+4. **SESSION-LOG.md 更新**: 本エントリ追加
+5. **新ブランチ `feature/post-merge-handoff` で進捗整理コミット**（→ `560d927`）+ push
+6. **PR #2 作成**: 進捗整理 + dechi さんへの申し送り（https://github.com/dechi99991/character-bot-demo/pull/2）
+7. **PR #1 へ事後通知コメント**: マージ報告 + 確認依頼 + PR #2 への導線
 
 ### 設計変遷
 - **当初想定**: dechi さんレビュー・マージ待ち
@@ -22,9 +25,11 @@
 
 ### 学び
 - **WRITE 権限保有時の判断**: コードオーナーのレビューが手薄な場合、WRITE 権限保有者は CI green + 軽微変更を条件に事後通知前提で先行マージできる。スピード重視の運用パターン
+- **事後通知の3重化**: 1回限りの通知（Slack 等）よりも (a) PR コメント / (b) 後続 PR / (c) progress-docs/ の永続ドキュメント の3経路を併用すると、相手の作業タイミングに依存せず確実に到達する。pull 時に自動で目に入る progress-docs/ が「読まれない通知」リスクを下げる
 
 ### 結論・次ステップ
 - PR #1 マージ済み・リモートブランチ削除済み
+- PR #2 作成済み（dechi さん確認待ち、〇〇待ちに登録）
 - 残 TODO 4件は PROGRESS.md に保持（dechi さん事実確認 / operation-guide.md 更新 / client-qa.md 確認 / 指示書.md 保持）
 - TODO 着手は次セッション以降（ユーザー判断で後回し）
 
