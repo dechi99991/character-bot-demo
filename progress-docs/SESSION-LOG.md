@@ -3,6 +3,41 @@
 <!-- セッションごとに「何を・なぜ・どう考えたか」を追記する -->
 <!-- /session-end 実行時に最上部へ新エントリを追記 -->
 
+## 2026-04-30 セッション — PR #1 マージ + 後片付け
+
+### 目的
+- PR #1（Claude Code 管理基盤 + 指示書 v2）の状態確認・処理
+- ローカル/リモート状態の最新化と申し送り整備
+
+### 実施内容
+1. **PR #1 マージ**: dechi さん（オーナー）レビュー待ちだったが、CI green（Vercel SUCCESS）+ WRITE 権限保有を確認のうえ長瀬側で squash merge（→ `f013271`）
+2. **リモート feature ブランチ削除確認**: GitHub 側は削除済み、ローカルの stale ref を `git fetch --prune` で解消
+3. **PROGRESS.md 更新**: 「進行中」「〇〇待ち」から PR #1 関連を除去、dechi さん向け申し送りセクションを追加
+4. **SESSION-LOG.md 更新**: 本エントリ追加
+5. **新ブランチ `feature/post-merge-handoff` で進捗整理コミット**（→ `560d927`）+ push
+6. **PR #2 作成**: 進捗整理 + dechi さんへの申し送り（https://github.com/dechi99991/character-bot-demo/pull/2）
+7. **PR #1 へ事後通知コメント**: マージ報告 + 確認依頼 + PR #2 への導線
+
+### 設計変遷
+- **当初想定**: dechi さんレビュー・マージ待ち
+- **転換契機**: PM（長瀬）から「勝手にマージできないか、そのまま進めたい」との判断
+- **採用方針**: WRITE 権限を活かして長瀬側 merge → 事後通知（PR コメント + progress-docs）
+
+### 学び
+- **WRITE 権限保有時の判断**: コードオーナーのレビューが手薄な場合、WRITE 権限保有者は CI green + 軽微変更を条件に事後通知前提で先行マージできる。スピード重視の運用パターン
+- **事後通知の3重化**: 1回限りの通知（Slack 等）よりも (a) PR コメント / (b) 後続 PR / (c) progress-docs/ の永続ドキュメント の3経路を併用すると、相手の作業タイミングに依存せず確実に到達する。pull 時に自動で目に入る progress-docs/ が「読まれない通知」リスクを下げる
+
+### 結論・次ステップ
+- PR #1 マージ済み・リモートブランチ削除済み
+- PR #2 作成済み（dechi さん確認待ち、〇〇待ちに登録）
+- 残 TODO 4件は PROGRESS.md に保持（dechi さん事実確認 / operation-guide.md 更新 / client-qa.md 確認 / 指示書.md 保持）
+- TODO 着手は次セッション以降（ユーザー判断で後回し）
+
+### ブランチ
+- `feature/post-merge-handoff` — PROGRESS.md / SESSION-LOG.md 更新（PR #1 マージ後の片付け）
+
+---
+
 ## 2026-04-29 セッション — Claude Code 管理基盤の後付け + 指示書 v2 新設
 
 > **このセッションは claude-project-base ハーネスから実施**: PM（長瀬）が claude-project-base の init-collab パターンを使って後付けセットアップを行った。本リポジトリ内では作業していない（PR #1 経由で取り込み）。

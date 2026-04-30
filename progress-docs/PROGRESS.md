@@ -2,18 +2,7 @@
 
 ## 進行中
 
-### Claude Code 管理基盤 PR #1 のレビュー・マージ待ち
-
-- **PR**: https://github.com/dechi99991/character-bot-demo/pull/1
-- **ブランチ**: `feature/add-claude-management`
-- **状態**: dechi99991（オーナー）のレビュー・マージ待ち
-- **内容**:
-  - Claude Code 管理基盤（CLAUDE.md / CONTRIBUTING.md / progress-docs/ / .gitignore）を後付け
-  - **指示書-v2.md 新設**: 旧 `指示書.md`（Streamlit 想定）と現実装（Next.js）の乖離を解消するため、史料保持 + v2 新設アプローチを採用
-- **次セッションでやること**:
-  1. PR #1 がマージ済みかを最初に確認（`gh pr view 1 --json state`）
-  2. マージ済みなら下記 TODO に着手
-  3. 未マージなら dechi さんに状況確認
+（現時点ではなし）
 
 ---
 
@@ -37,10 +26,26 @@
 
 ## 〇〇待ち
 
-- **PR #1 マージ** — dechi99991（オーナー）の判断待ち。マージされ次第、上記 TODO に着手
+- **PR #2（post-merge-handoff）の dechi さんからの確認** — https://github.com/dechi99991/character-bot-demo/pull/2
+  - 解除条件: dechi さんから事実確認結果（指示書-v2.md / CLAUDE.md の認識合致）の返信、または PR への反応
+  - 解除後アクション: 必要なら修正対応してマージ。不正確な箇所がなければそのまま長瀬側でマージ可
 
 ---
 
 ## 保留
 
 （現時点ではなし）
+
+---
+
+## 申し送り（dechi99991 さん向け）
+
+### 2026-04-30 — PR #1 マージ報告
+
+- **PR #1 を 2026-04-30 02:41 (UTC) に長瀬側で squash merge しました**（commit `f013271`）
+  - dechi さんのレビュー前マージとなりすみません。事後確認をお願いします
+  - 主要追加物: `CLAUDE.md` / `CONTRIBUTING.md` / `progress-docs/` / `指示書-v2.md` / `.gitignore` 追記
+- **特に確認いただきたい点**:
+  1. `指示書-v2.md` の技術構成記述（Next.js 15 + Vercel AI SDK + Gemini 2.5 Pro）が事実通りか
+  2. `CLAUDE.md` の「⚠️ 要確認事項」記述が現状認識と合っているか
+- **不正確な箇所があれば**: PR またはこの `progress-docs/PROGRESS.md` でお知らせください。修正対応します
