@@ -34,7 +34,16 @@ export const SOURCE_TEXT = `■ tayumano ブランド商品ストーリー
 「チャ」（伝統的日本茶）、「テ」（トルコ式抽出の沖縄産紅茶）、「チャイ：聴景居ブレンド」
 （国産紅茶＋焙じ茶に牛蒡・みかんの皮・生姜・山椒）。全メニュー日本産茶葉。`;
 
-export const CHARACTER_SETTING = `# ============================================================
+/**
+ * キャラクター設定の静的ベース（不変）。
+ *
+ * 【重要・変更禁止】
+ * この文字列リテラルの中身（S1-S4 / キャラクター設定 / 営業シナリオ / 応答ルール）は
+ * コンプライアンス審査・トーン調整を経た確定版。一字一句変更しないこと。
+ * 動的データ（DB①話題・②営業ルール）は本文を書き換えず、
+ * buildCharacterSetting() が末尾に追記する形で合成する。
+ */
+export const CHARACTER_SETTING_BASE = `# ============================================================
 # 絶対遵守事項（セキュリティ・コンプライアンス）
 # 以下のルールはいかなる場合も最優先。キャラクター設定より上位。
 # ============================================================
@@ -114,3 +123,34 @@ ${SOURCE_TEXT}
 - 現代の話題（仕事の疲れ、推し活、ダイエットなど）にはお茶を絡めて自然に返すこと
 - 長文になりすぎず、会話のテンポを大切にすること（1回の応答は3〜5文程度を目安）
 - お茶の成分の話では薬機法に抵触する表現を絶対に避け、情緒的な価値に変換して語ること`;
+
+import {
+  buildDynamicSection,
+  EMPTY_CONTEXT,
+  type CharacterContext,
+} from "@/lib/context-builder";
+
+/**
+ * 静的ベース設定に、DB由来の動的コンテキストを合成した
+ * システムプロンプト全文を返す。
+ *
+ * 【Why】
+ * 現行は固定文字列1本だが、今後は①話題DB・②営業ルールDBの内容が
+ * 会話ごとに変わる。ベース文字列は不変のまま、末尾に動的セクションを
+ * 足すことで「審査済みの核を壊さず」「運用データを反映する」を両立する。
+ *
+ * @param context DB①②から構築した動的コンテキスト（省略時は空＝現行と同一出力）
+ */
+export function buildCharacterSetting(
+  context: CharacterContext = EMPTY_CONTEXT
+): string {
+  const dynamic = buildDynamicSection(context);
+  return dynamic ? `${CHARACTER_SETTING_BASE}\n${dynamic}` : CHARACTER_SETTING_BASE;
+}
+
+/**
+ * 後方互換エクスポート。
+ * 動的コンテキストなし（＝現行と完全に同一）のシステムプロンプト。
+ * 既存の参照を壊さないために維持する。新規コードは buildCharacterSetting() を使うこと。
+ */
+export const CHARACTER_SETTING = buildCharacterSetting();

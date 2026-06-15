@@ -3,6 +3,43 @@
 <!-- セッションごとに「何を・なぜ・どう考えたか」を追記する -->
 <!-- /session-end 実行時に最上部へ新エントリを追記 -->
 
+## 2026-06-15 セッション — Cloudflare Workers 移行設計 + 管理画面プロトタイプ実装
+
+### 目的
+- プロジェクト全体像の把握とヒヤリング
+- 寺園さんへの委託に向けた要件定義書の整備
+- 現行ロジックの疎結合リファクタリング
+- DB・CRUD API・管理画面のプロトタイプ実装
+
+### 実施内容
+1. **ヒヤリング（全体像確定）**: Cloudflare Workers 全面移行・DB 3種（話題/営業ルール/ログ）・管理画面・フロントは現行デモ踏襲を確定
+2. **要件定義書作成** (`docs/requirements-for-terazono.md`): 全13章。アーキテクチャ図・API 型定義・D1 DDL・フェーズ計画・未決事項10件を含む
+3. **疎結合リファクタリング**: `lib/db/index.ts`（DB抽象 IF）/ `lib/context-builder.ts`（プロンプト注入ビルダー）/ `lib/chat-handler.ts`（フレームワーク非依存コア）/ `app/api/chat/route.ts`（薄いアダプター化）
+4. **A/B/C 実装**: InMemoryDataStore（Seed データあり）+ CRUD API（topics/sales-rules）+ `/api/log`
+5. **管理画面プロトタイプ** (`app/admin/page.tsx`): 話題・営業ルールの追加/有効無効/削除。認証なし（Phase 3 で Cloudflare Access 追加予定）
+6. **PR #3 作成・マージ・ブランチ後処理**: `feature/cloudflare-migration-prep` → main
+7. **INSIGHTS.md 復元**: opus-thinker が過去エントリを誤削除 → 手動修正
+
+### 設計変遷
+- **DB選択**: Vercel Postgres / Turso / In-Memory の3案を検討。「追加パッケージゼロ・即デプロイ可・D1 実装の差し替えで移行完了」という基準で In-Memory を採用。プロトタイプとして割り切る判断
+- **管理画面 UI**: Google フォーム案を検討したが「閲覧できない・編集削除不可・拡張困難」の3点で不採用。自前シンプルフォームへ
+- **指示書-v2.md の確認依頼**: 前セッションから dechi さん待ちだったが、プロジェクト方向（Cloudflare Workers 移行）が変わったことでもはや陳腐化。PR #2 クローズ・PR #3 で新申し送りに切り替え
+
+### 学び
+- フロントエンドのデザインが届いていなくても、API/DB/管理画面の提供物が決まっていれば要件定義書と実装サンプルを先行整備できる
+- サブエージェント（opus-thinker）は `progress-docs/` 等の管理ファイルを意図せず変更することがある。プロンプトで「変更禁止ファイル」を明示するか、事後検証を行う
+- In-Memory Singleton は Vercel サーバーレスの warm インスタンス内で生きる。パッケージ不要のプロトタイプとして有効
+
+### 結論・次ステップ
+- 要件定義書を寺園さんと共有し §13 未決事項（認証・CORS・D1）を詰める
+- 指示書-v2.md を Cloudflare Workers 移行方針に更新
+- operation-guide.md / client-qa-*.md の Streamlit 記述を更新
+
+### ブランチ
+- `feature/cloudflare-migration-prep` → main へ PR #3 でマージ済み（4コミット）
+
+---
+
 ## 2026-04-30 セッション — PR #1 マージ + 後片付け
 
 ### 目的
