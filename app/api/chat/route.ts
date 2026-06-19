@@ -9,9 +9,13 @@
  */
 
 import { handleChat } from "@/lib/chat-handler";
+import { mockChat } from "@/lib/mock-chat-handler";
 import type { CoreMessage } from "ai";
 
 export async function POST(req: Request) {
   const { messages } = (await req.json()) as { messages: CoreMessage[] };
+  if (process.env.MOCK_CHAT === "true") {
+    return mockChat({ messages });
+  }
   return handleChat({ messages });
 }
