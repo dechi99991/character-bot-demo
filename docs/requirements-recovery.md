@@ -184,7 +184,7 @@
 **タグ**: 明示指示（DBアクセスモック要望に対応）
 **現状の実装**: `ChatDataStore` インターフェースで topics / sales_rules / products / conversation_logs を抽象化。実装は `InMemoryDataStore`（Seed付き）。D1差し替え前提の疎結合設計。
 **根拠・経緯**: PM明示指示「LLMモックとは別でDBアクセスモックも必要」。Cloudflare D1 移行を見据えた設計。
-**懸念・補足**: InMemory はサーバーレス cold start でリセット。本番DB（D1）確定は寺園さんとの未決事項（§13）。
+**懸念・補足**: InMemory はサーバーレス cold start でリセット。加えて Next.js dev 環境では API ルートごとにモジュールスコープが分離されることがあり、管理画面（`/api/sales-rules`）で追加したデータがチャット（`/api/chat`）に反映されない場合がある。管理画面 CRUD は「D1 接続後の UI 確認用プロトタイプ」であり、現状 Seed データはコード直接編集＋サーバー再起動での反映が正規手順。本番DB（D1）確定は寺園さんとの未決事項（§13）。
 
 ### REQ-402: 話題DB（Topics）とSeedデータ
 **タグ**: AI暗黙判断（Seed内容）
