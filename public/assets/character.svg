@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" fill="none">
+  <!-- 髪 -->
+  <ellipse cx="100" cy="70" rx="38" ry="18" fill="#1a1a1a"/>
+  <circle cx="68" cy="78" r="16" fill="#1a1a1a"/>
+  <circle cx="132" cy="78" r="16" fill="#1a1a1a"/>
+  <!-- 顔 -->
+  <circle cx="100" cy="95" r="38" fill="#fce4c8"/>
+  <!-- 目 -->
+  <ellipse cx="86" cy="90" r="6" ry="7" fill="white"/>
+  <ellipse cx="114" cy="90" r="6" ry="7" fill="white"/>
+  <circle cx="87" cy="91" r="4" fill="#3a2a1a"/>
+  <circle cx="115" cy="91" r="4" fill="#3a2a1a"/>
+  <circle cx="89" cy="89" r="1.5" fill="white"/>
+  <circle cx="117" cy="89" r="1.5" fill="white"/>
+  <!-- 口 -->
+  <path d="M91 108 Q100 115 109 108" stroke="#c87070" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- 着物（上半身） -->
+  <path d="M62 133 Q55 150 50 250 L150 250 Q145 150 138 133 Q120 125 100 128 Q80 125 62 133Z" fill="#2c5f4b"/>
+  <!-- 着物（白い衿） -->
+  <path d="M88 133 Q100 145 112 133" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- 帯 -->
+  <rect x="52" y="210" width="96" height="18" rx="4" fill="#7a4a2a"/>
+  <!-- 着物（下半身） -->
+  <path d="M50 225 Q48 310 52 380 L148 380 Q152 310 150 225Z" fill="#2c5f4b"/>
+  <!-- 袖（左） -->
+  <path d="M62 140 Q30 155 28 200 Q36 210 56 200 Q60 170 68 155Z" fill="#2c5f4b"/>
+  <!-- 袖（右） -->
+  <path d="M138 140 Q170 155 172 200 Q164 210 144 200 Q140 170 132 155Z" fill="#2c5f4b"/>
+  <!-- 足袋（白い足先） -->
+  <ellipse cx="72" cy="385" rx="22" ry="10" fill="white" stroke="#ccc" stroke-width="1"/>
+  <ellipse cx="128" cy="385" rx="22" ry="10" fill="white" stroke="#ccc" stroke-width="1"/>
+  <!-- 湯呑（右手に持つ） -->
+  <rect x="150" y="175" width="26" height="28" rx="4" fill="#7a9d88"/>
+  <ellipse cx="163" cy="175" rx="13" ry="4" fill="#5c7361"/>
+  <path d="M176 183 Q184 188 176 197" stroke="#5c7361" stroke-width="3" fill="none"/>
+</svg>
