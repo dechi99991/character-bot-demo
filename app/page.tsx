@@ -24,9 +24,9 @@ export default function Page() {
   };
 
   return (
-    <div className="w-full h-screen bg-black">
+    <div className="w-full h-[100dvh] bg-black">
       {/* 茶室 */}
-      <div className="relative w-full h-screen overflow-hidden font-sans text-gray-800 flex justify-center bg-tea-bg">
+      <div className="relative w-full h-[100dvh] overflow-hidden font-sans text-gray-800 flex justify-center bg-tea-bg">
         {/* z-0: 背景（/public/assets/background.svg — アップロードで差し替え可） */}
         <Background>
           <SvgBackground />
