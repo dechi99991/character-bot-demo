@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { Send, Plus } from "lucide-react";
+import { Send } from "lucide-react";
 import type { Message } from "@ai-sdk/react";
 
 type ChatUIProps = {
@@ -88,14 +88,7 @@ export default function ChatUI({
                 className="w-full h-full p-4 bg-transparent resize-none outline-none text-gray-700 placeholder-gray-400 font-serif"
               />
             </div>
-            <div className="flex justify-between items-center mt-3 px-2">
-              <button
-                type="button"
-                className="p-2 hover:bg-black/5 rounded-full transition text-tea-dark"
-                aria-label="添付"
-              >
-                <Plus size={24} strokeWidth={3} />
-              </button>
+            <div className="flex justify-end items-center mt-3 px-2">
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}

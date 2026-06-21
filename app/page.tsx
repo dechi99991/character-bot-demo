@@ -6,8 +6,7 @@ import Noren from "@/components/Noren";
 import ChatUI from "@/components/ChatUI";
 import CharacterView from "@/components/CharacterView";
 import Background from "@/components/Background";
-import GridBackground from "@/components/GridBackground";
-import BackgroundFX from "@/components/BackgroundFX";
+import SvgBackground from "@/components/SvgBackground";
 import SceneObjects from "@/components/SceneObjects";
 
 export default function Page() {
@@ -26,17 +25,14 @@ export default function Page() {
 
   return (
     <div className="w-full h-screen bg-black">
-      {/* 茶室 — 暖簾の裏で先にレンダリング */}
+      {/* 茶室 */}
       <div className="relative w-full h-screen overflow-hidden font-sans text-gray-800 flex justify-center bg-tea-bg">
-        {/* z-0: 背景（差し替えポイント: GridBackground → SvgBackground へ） */}
+        {/* z-0: 背景（/public/assets/background.svg — アップロードで差し替え可） */}
         <Background>
-          <GridBackground />
+          <SvgBackground />
         </Background>
 
-        {/* z-[5]: 背景クリックインタラクション層 */}
-        <BackgroundFX />
-
-        {/* z-[8]: 背景オブジェクト層（急須等 — SVG ファイルのアップロードで差し替え可） */}
+        {/* z-[8]: 背景オブジェクト層（急須等） */}
         <SceneObjects />
 
         {/* z-10: チャットUI + キャラクター */}
@@ -52,7 +48,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* z-50: 暖簾レイヤー */}
+      {/* z-50: 暖簾 */}
       {showNoren && <Noren onEnter={handleEnter} />}
     </div>
   );

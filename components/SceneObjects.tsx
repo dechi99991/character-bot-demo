@@ -1,22 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 interface SceneObjectConfig {
   id: string;
-  /** /public/assets/objects/ 以下の SVG ファイルパス */
   src: string;
   alt: string;
   style: React.CSSProperties;
-  className?: string;
 }
 
-/**
- * 背景オブジェクト定義。
- * 新オブジェクトを追加するときはここに1エントリ追加し、
- * /public/assets/objects/<name>.svg を配置する。
- * 既存オブジェクトの差し替えは SVG ファイルのアップロードのみで完結する。
- */
 const SCENE_OBJECTS: SceneObjectConfig[] = [
   {
     id: "teapot",
@@ -27,24 +19,39 @@ const SCENE_OBJECTS: SceneObjectConfig[] = [
       bottom: "28%",
       left: "4%",
       width: "90px",
-      opacity: 0.85,
     },
-    className: "floating-animation",
   },
 ];
 
-/** z-[8]: Background(0) と ChatUI(10) の間に配置するオブジェクト層 */
+/** z-[8]: 背景オブジェクト層。SVG ファイルのアップロードで差し替え可。 */
 export default function SceneObjects() {
+  const [animating, setAnimating] = useState<Set<string>>(new Set());
+
+  const handleClick = (id: string) => {
+    if (animating.has(id)) return;
+    setAnimating((prev) => new Set(prev).add(id));
+    setTimeout(() => {
+      setAnimating((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 500);
+  };
+
   return (
     <div className="absolute inset-0 z-[8] pointer-events-none hidden md:block">
       {SCENE_OBJECTS.map((obj) => (
-        <img
-          key={obj.id}
-          src={obj.src}
-          alt={obj.alt}
-          style={obj.style}
-          className={obj.className}
-        />
+        <div key={obj.id} style={obj.style} className="floating-animation">
+          <img
+            src={obj.src}
+            alt={obj.alt}
+            className={`w-full h-full object-contain cursor-pointer pointer-events-auto opacity-85 ${
+              animating.has(obj.id) ? "wiggle-once" : ""
+            }`}
+            onClick={() => handleClick(obj.id)}
+          />
+        </div>
       ))}
     </div>
   );

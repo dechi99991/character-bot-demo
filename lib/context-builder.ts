@@ -15,10 +15,10 @@
  * buildCharacterSetting 側で既存プロンプトに何も足さない（＝現行動作を維持）。
  */
 
-import type { Topic, SalesRule } from "@/lib/db";
+import type { Topic, SalesRule, ShopifyProduct } from "@/lib/db";
 
 // 型を1箇所から参照できるよう再エクスポート
-export type { Topic, SalesRule } from "@/lib/db";
+export type { Topic, SalesRule, ShopifyProduct } from "@/lib/db";
 
 /**
  * chat-handler / character.ts に渡す動的コンテキスト。
@@ -29,12 +29,15 @@ export interface CharacterContext {
   topics: Topic[];
   /** ② 営業ルールDB由来のレコメンド候補（営業モード用） */
   salesRules: SalesRule[];
+  /** ③ Shopify 紹介商品（featured & enabled なもの） */
+  products: ShopifyProduct[];
 }
 
 /** 空の CharacterContext（DB未接続時・テスト時の既定） */
 export const EMPTY_CONTEXT: CharacterContext = {
   topics: [],
   salesRules: [],
+  products: [],
 };
 
 /**
@@ -77,6 +80,28 @@ function buildSalesRulesSection(salesRules: SalesRule[]): string {
 }
 
 /**
+ * ③ Shopify 商品DBから、紹介候補セクションを生成。
+ * プロンプト内で「話題に上がれば自然に紹介する」参照表として機能する。
+ */
+function buildProductsSection(products: ShopifyProduct[]): string {
+  if (products.length === 0) return "";
+
+  const lines = products
+    .map((p) => {
+      const priceStr = p.onSale && p.salePrice
+        ? `¥${p.salePrice.toLocaleString()}（定価 ¥${p.price.toLocaleString()}・セール中）`
+        : `¥${p.price.toLocaleString()}`;
+      return `- ${p.name}: ${p.description} ${priceStr} → ${p.shopifyUrl}`;
+    })
+    .join("\n");
+
+  return [
+    "【紹介できる商品一覧（話題が自然に合ったときだけ、リンク付きで紹介する）】",
+    lines,
+  ].join("\n");
+}
+
+/**
  * CharacterContext から、システムプロンプト末尾に追記する文字列を生成。
  * 注入すべきものが何もなければ空文字を返す。
  */
@@ -84,6 +109,7 @@ export function buildDynamicSection(context: CharacterContext): string {
   const sections = [
     buildTopicsSection(context.topics),
     buildSalesRulesSection(context.salesRules),
+    buildProductsSection(context.products),
   ].filter((s) => s.length > 0);
 
   if (sections.length === 0) return "";

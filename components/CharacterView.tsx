@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 const HINTS = [
   "煎茶の茶葉をつかったお茶の淹れ方のバリエーションは何がある？",
   "夜、ぐっすり寝たい時にオススメの茶葉はどれ？",
@@ -11,6 +13,14 @@ type CharacterViewProps = {
 };
 
 export default function CharacterView({ onHintClick }: CharacterViewProps) {
+  const [isPopping, setIsPopping] = useState(false);
+
+  const handleCharacterClick = () => {
+    if (isPopping) return;
+    setIsPopping(true);
+    setTimeout(() => setIsPopping(false), 550);
+  };
+
   return (
     <div className="hidden md:flex flex-1 relative justify-center items-end pointer-events-none pb-10">
       {/* HINT吹き出し */}
@@ -31,18 +41,19 @@ export default function CharacterView({ onHintClick }: CharacterViewProps) {
               </li>
             ))}
           </ul>
-          {/* 吹き出しのしっぽ */}
           <div className="absolute -bottom-3 right-10 w-6 h-6 bg-white border-b-2 border-r-2 border-tea-mid transform rotate-45" />
         </div>
       </div>
 
-      {/* キャラクター — /public/assets/character.svg を参照 */}
-      {/* 差し替えは character.svg のアップロードのみ。コード変更不要 */}
+      {/* キャラクター — /public/assets/character.svg を参照。差し替えはファイルのアップロードのみ */}
       <div className="relative z-20 w-[300px] h-[500px] breathing-animation">
         <img
           src="/assets/character.svg"
           alt="お茶キャラクター"
-          className="w-full h-full object-contain filter drop-shadow-lg"
+          className={`w-full h-full object-contain filter drop-shadow-lg cursor-pointer pointer-events-auto ${
+            isPopping ? "pop-once" : ""
+          }`}
+          onClick={handleCharacterClick}
         />
       </div>
     </div>

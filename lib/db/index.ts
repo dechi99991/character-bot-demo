@@ -55,6 +55,34 @@ export interface SalesRule {
   updatedAt: string; // ISO 8601
 }
 
+/**
+ * ③ Shopify 商品マスタ: チャットで紹介できる商品1件
+ * Shopify 側の在庫・価格は定期同期 or Webhook で更新する想定。
+ */
+export interface ShopifyProduct {
+  id: number;
+  /** 商品名（例: "深呼吸のほうじ茶"）*/
+  name: string;
+  /** Shopify 商品ページ URL */
+  shopifyUrl: string;
+  /** チャットで使う短い紹介文（1〜2文） */
+  description: string;
+  /** キーワードマッチ用タグ（カンマ区切り）*/
+  tags: string;
+  /** 定価（円・税込） */
+  price: number;
+  /** セール価格（セール中のみ設定） */
+  salePrice?: number;
+  /** 現在セール中フラグ */
+  onSale: boolean;
+  /** チャットでの優先紹介フラグ */
+  featured: boolean;
+  /** 有効/無効（在庫切れ・取り扱い停止時に false） */
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** ④ 会話ログ: 書き込み用の入力 */
 export interface ConversationLogInput {
   /** セッション/会話単位の識別子（フロント発番 or サーバ発番） */
@@ -82,6 +110,8 @@ export interface ChatDataStore {
   listActiveTopics(): Promise<Topic[]>;
   /** ② 有効な営業ルールを取得（レコメンド判定用） */
   listActiveSalesRules(): Promise<SalesRule[]>;
+  /** ③ 有効・紹介対象の Shopify 商品を取得 */
+  listFeaturedProducts(): Promise<ShopifyProduct[]>;
   /** ④ 会話ログを1件書き込む */
   appendConversationLog(log: ConversationLogInput): Promise<void>;
 
@@ -136,7 +166,7 @@ const SEED_TOPICS: Topic[] = [
 const SEED_SALES_RULES: SalesRule[] = [
   {
     id: 1,
-    keywords: "疲れた,忙しい,休みたい,しんどい",
+    keywords: "疲れた,忙しい,休みたい,しんどい,夜,睡眠,寝たい,リラックス,ほうじ茶",
     recommendProduct: "深呼吸のほうじ茶 (Midnight Roaster)",
     recommendMessage:
       "限界まで焙煎した香ばしさが「心のスイッチをオフにする」感覚を引き出す。ゆっくり深呼吸しながら飲むと効果的。",
@@ -158,6 +188,67 @@ const SEED_SALES_RULES: SalesRule[] = [
   },
 ];
 
+const SEED_PRODUCTS: ShopifyProduct[] = [
+  {
+    id: 1,
+    name: "深呼吸のほうじ茶（Midnight Roaster）",
+    shopifyUrl: "https://tayumano.myshopify.com/products/midnight-roaster",
+    description:
+      "限界まで焙煎した香ばしさが「心のスイッチをオフにする」感覚を引き出す。就寝前や疲れを感じたときに。",
+    tags: "ほうじ茶,疲れた,リラックス,夜,睡眠,焙煎",
+    price: 1800,
+    salePrice: 1440,
+    onSale: true,
+    featured: true,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 2,
+    name: "静かなる覚醒の煎茶（Silent Awakening）",
+    shopifyUrl: "https://tayumano.myshopify.com/products/silent-awakening",
+    description:
+      "霧深い山奥のような静かなクリアさをもたらす。無理にテンションを上げずに集中したいときに。",
+    tags: "煎茶,集中,仕事,クリア,覚醒,頭を使う",
+    price: 2200,
+    onSale: false,
+    featured: true,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 3,
+    name: "水出し煎茶セット（夏季限定）",
+    shopifyUrl: "https://tayumano.myshopify.com/products/cold-brew-set",
+    description:
+      "冷水ポットに入れて一晩冷蔵庫へ。苦味が抑えられ、甘みだけが引き立つ夏の定番。セット内容: 茶葉30g × 3袋。",
+    tags: "水出し,夏,冷たい,暑い,アイス,緑茶,煎茶",
+    price: 2800,
+    salePrice: 2200,
+    onSale: true,
+    featured: true,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 4,
+    name: "煎茶スターターキット",
+    shopifyUrl: "https://tayumano.myshopify.com/products/sencha-starter",
+    description:
+      "急須・茶葉・湯冷まし付きのビギナー向けセット。正しい淹れ方カード同梱。",
+    tags: "煎茶,入門,ギフト,プレゼント,セット,急須,初心者",
+    price: 4800,
+    onSale: false,
+    featured: false,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+];
+
 // ============================================================
 // In-Memory 実装（プロトタイプ用）
 // ============================================================
@@ -172,6 +263,7 @@ const SEED_SALES_RULES: SalesRule[] = [
 class InMemoryDataStore implements ChatDataStore {
   private topics: Topic[] = SEED_TOPICS.map((t) => ({ ...t }));
   private salesRules: SalesRule[] = SEED_SALES_RULES.map((r) => ({ ...r }));
+  private products: ShopifyProduct[] = SEED_PRODUCTS.map((p) => ({ ...p }));
   private nextTopicId = SEED_TOPICS.length + 1;
   private nextRuleId = SEED_SALES_RULES.length + 1;
 
@@ -185,6 +277,10 @@ class InMemoryDataStore implements ChatDataStore {
     return this.salesRules
       .filter((r) => r.enabled)
       .sort((a, b) => a.priority - b.priority);
+  }
+
+  async listFeaturedProducts(): Promise<ShopifyProduct[]> {
+    return this.products.filter((p) => p.enabled && p.featured);
   }
 
   async appendConversationLog(_log: ConversationLogInput): Promise<void> {
