@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 120">
+  <!-- 蒸気 -->
+  <path d="M52 18 Q48 10 52 2" stroke="#7a9d88" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7">
+    <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite"/>
+  </path>
+  <path d="M70 14 Q66 6 70 -2" stroke="#7a9d88" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.5">
+    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.4s" repeatCount="indefinite"/>
+  </path>
+  <path d="M88 18 Q84 10 88 2" stroke="#7a9d88" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7">
+    <animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.8s" repeatCount="indefinite"/>
+  </path>
+  <!-- 蓋 -->
+  <ellipse cx="70" cy="32" rx="26" ry="9" fill="#3a4a3e"/>
+  <ellipse cx="70" cy="28" rx="10" ry="5" fill="#4a5d4e"/>
+  <!-- 本体 -->
+  <path d="M30 40 Q25 90 35 108 Q70 116 105 108 Q115 90 110 40 Z" fill="#4a5d4e"/>
+  <!-- 注ぎ口（左） -->
+  <path d="M30 60 Q8 52 6 70 Q8 84 30 80" stroke="#2c5f4b" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="6" cy="70" rx="5" ry="6" fill="#2c5f4b" opacity="0.6"/>
+  <!-- 取っ手（右） -->
+  <path d="M110 60 Q134 52 132 78 Q130 94 110 88" stroke="#2c5f4b" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 光沢 -->
+  <ellipse cx="60" cy="65" rx="14" ry="22" fill="white" opacity="0.08"/>
+</svg>

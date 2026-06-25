@@ -34,6 +34,12 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // チャット画面の overflow:hidden をリセット（admin は通常スクロール）
+  useEffect(() => {
+    document.body.style.overflowY = "auto";
+    return () => { document.body.style.overflowY = ""; };
+  }, []);
+
   const load = useCallback(async () => {
     try {
       const [t, r] = await Promise.all([

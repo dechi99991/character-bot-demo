@@ -15,10 +15,10 @@
  * buildCharacterSetting 側で既存プロンプトに何も足さない（＝現行動作を維持）。
  */
 
-import type { Topic, SalesRule } from "@/lib/db";
+import type { Topic, SalesRule, ShopifyProduct } from "@/lib/db";
 
 // 型を1箇所から参照できるよう再エクスポート
-export type { Topic, SalesRule } from "@/lib/db";
+export type { Topic, SalesRule, ShopifyProduct } from "@/lib/db";
 
 /**
  * chat-handler / character.ts に渡す動的コンテキスト。
@@ -29,12 +29,15 @@ export interface CharacterContext {
   topics: Topic[];
   /** ② 営業ルールDB由来のレコメンド候補（営業モード用） */
   salesRules: SalesRule[];
+  /** ③ Shopify 紹介商品（featured & enabled なもの） */
+  products: ShopifyProduct[];
 }
 
 /** 空の CharacterContext（DB未接続時・テスト時の既定） */
 export const EMPTY_CONTEXT: CharacterContext = {
   topics: [],
   salesRules: [],
+  products: [],
 };
 
 /**
@@ -71,8 +74,64 @@ function buildSalesRulesSection(salesRules: SalesRule[]): string {
     )
     .join("\n");
   return [
-    "【営業レコメンド指針（押し売りはせず、会話の流れに合うときだけ使う）】",
+    "【特別・キャンペーン用レコメンド指針（特定キーワード時の補助。下記の商品カタログが主、こちらは従）】",
+    "※ 通常の提案は商品カタログのシーン・気分マッチを優先する。以下は特売や特定文脈での補強として扱う。",
     lines,
+  ].join("\n");
+}
+
+/**
+ * ③ Shopify 商品DBから、属性リッチな商品カタログセクションを生成。
+ *
+ * 【Why】
+ * レコメンド制御（ハードガードレール／ソフト推薦）を LLM が適用するには、
+ * カフェイン・味プロファイル・シーン・気分など全属性をプロンプトに露出する必要がある。
+ * 各商品を「カード」形式で整形し、LLM が機械的フィルタ→シーン/気分マッチの順で
+ * 1〜2点を選べる状態を作る。
+ */
+function buildProductsSection(products: ShopifyProduct[]): string {
+  if (products.length === 0) return "";
+
+  const cards = products
+    .map((p) => {
+      const priceStr =
+        p.onSale && p.salePrice
+          ? `¥${p.salePrice.toLocaleString()}（定価 ¥${p.price.toLocaleString()}・セール中）`
+          : `¥${p.price.toLocaleString()}`;
+
+      const t = p.tasteProfile;
+      const lines: string[] = [];
+      lines.push(`【${p.name}】(${p.category})`);
+      lines.push(`  ストーリー: ${p.story}`);
+      lines.push(
+        `  カフェイン: ${p.caffeineLevel} | 淹れやすさ: ${p.brewingDifficulty}`
+      );
+      lines.push(
+        `  味プロファイル: 旨味=${t.umami} 渋味=${t.astringency} 苦味=${t.bitterness} 甘味=${t.sweetness} 香ばしさ=${t.roastiness}`
+      );
+      lines.push(`  合うシーン: ${p.scenes.join("・")}`);
+      lines.push(`  気分・役割: ${p.moods.join("・")}`);
+      lines.push(`  飲み方: ${p.brewingMethods.join("・")}`);
+      lines.push(`  用途: ${p.purposes.join("・")}`);
+      if (p.isSet) {
+        lines.push("  ※ 詰め合わせセット（ビギナー第一候補）");
+      }
+      // 産地・品種・製法は揃っているものだけ露出（フックとして会話に溶かす）
+      const specParts: string[] = [];
+      if (p.origin) specParts.push(`産地: ${p.origin}`);
+      if (p.cultivar) specParts.push(`品種: ${p.cultivar}`);
+      if (p.processing) specParts.push(`製法: ${p.processing}`);
+      if (specParts.length > 0) {
+        lines.push(`  ${specParts.join(" / ")}`);
+      }
+      lines.push(`  価格: ${priceStr} → ${p.shopifyUrl}`);
+      return lines.join("\n");
+    })
+    .join("\n\n");
+
+  return [
+    "【紹介できる商品カタログ（ハードガードレール通過後、シーン・気分に最も寄り添う1〜2点を選ぶ）】",
+    cards,
   ].join("\n");
 }
 
@@ -84,6 +143,7 @@ export function buildDynamicSection(context: CharacterContext): string {
   const sections = [
     buildTopicsSection(context.topics),
     buildSalesRulesSection(context.salesRules),
+    buildProductsSection(context.products),
   ].filter((s) => s.length > 0);
 
   if (sections.length === 0) return "";

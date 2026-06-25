@@ -45,14 +45,15 @@ async function loadCharacterContext(
   dataStore: ChatDataStore
 ): Promise<CharacterContext> {
   try {
-    const [topics, salesRules] = await Promise.all([
+    const [topics, salesRules, products] = await Promise.all([
       dataStore.listActiveTopics(),
       dataStore.listActiveSalesRules(),
+      dataStore.listFeaturedProducts(),
     ]);
-    return { topics, salesRules };
+    return { topics, salesRules, products };
   } catch {
     // DB障害でチャットが落ちないようフォールバック
-    return { topics: [], salesRules: [] };
+    return { topics: [], salesRules: [], products: [] };
   }
 }
 

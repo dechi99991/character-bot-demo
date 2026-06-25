@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="grid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="80" x2="80" y2="80" stroke="#c5d8a4" stroke-width="1"/>
+      <line x1="80" y1="0" x2="80" y2="80" stroke="#c5d8a4" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="bottomFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="60%" stop-color="#c5d8a4" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#c5d8a4" stop-opacity="0.7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#fdfdf8"/>
+  <rect width="1920" height="1080" fill="url(#grid)" opacity="0.5"/>
+  <rect width="1920" height="1080" fill="url(#bottomFade)"/>
+</svg>

@@ -3,6 +3,17 @@
 @theme {
   --color-user: #e8f5e9;
   --color-assistant: #f5f5f5;
+
+  /* 茶室テーマカラー */
+  --color-tea-dark: #2c5f4b;
+  --color-tea-green: #4a5d4e;
+  --color-tea-mid: #7a9d88;
+  --color-tea-border: #3a4a3e;
+  --color-tea-light: #5c7361;
+  --color-tea-bg: #fdfdf8;
+  --color-tea-panel: #f0ece1;
+  --color-tea-panel-border: #e0dcce;
+  --color-tea-tatami: #c5d8a4;
 }
 
 html, body {
@@ -10,4 +21,55 @@ html, body {
   padding: 0;
   height: 100%;
   overflow: hidden;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.writing-vertical-rl {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.breathing-animation {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+.floating-animation {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-10deg) scale(1.12); }
+  40% { transform: rotate(10deg) scale(1.12); }
+  60% { transform: rotate(-6deg) scale(1.06); }
+  80% { transform: rotate(6deg) scale(1.06); }
+}
+.wiggle-once {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+@keyframes pop {
+  0%   { transform: scale(1) translateY(0); }
+  25%  { transform: scale(1.07) translateY(-12px); }
+  55%  { transform: scale(0.97) translateY(0); }
+  75%  { transform: scale(1.03) translateY(-4px); }
+  100% { transform: scale(1) translateY(0); }
+}
+.pop-once {
+  animation: pop 0.55s ease-out;
 }

@@ -55,6 +55,89 @@ export interface SalesRule {
   updatedAt: string; // ISO 8601
 }
 
+/** 味の強さ3段階（味プロファイル各要素で使用） */
+export type TasteLevel = "弱" | "中" | "強";
+/** カフェイン量4段階（ハードガードレール①の判定軸） */
+export type CaffeineLevel = "高" | "中" | "低" | "ゼロ";
+/** 淹れやすさ3段階（初心者導線④の判定軸） */
+export type BrewingDifficulty = "やさしい" | "ふつう" | "シビア";
+
+/**
+ * 味プロファイル: 商品の味わいを5要素で構造化。
+ * ハードガードレール②（苦手除外）・③（好み必須）の判定に使う。
+ */
+export interface TasteProfile {
+  /** 旨味 */
+  umami: TasteLevel;
+  /** 渋味 */
+  astringency: TasteLevel;
+  /** 苦味 */
+  bitterness: TasteLevel;
+  /** 甘味 */
+  sweetness: TasteLevel;
+  /** 香ばしさ */
+  roastiness: TasteLevel;
+}
+
+/**
+ * ③ Shopify 商品マスタ: チャットで紹介できる商品1件
+ * Shopify 側の在庫・価格は定期同期 or Webhook で更新する想定。
+ *
+ * 【設計方針】キーワードマッチ用の `tags` を廃止し、
+ * シーン・気分・味プロファイル等の構造化フィールドに置き換えた。
+ * これによりレコメンド制御（ハードガードレール／ソフト推薦）を
+ * LLM が属性ベースで適用できる。
+ */
+export interface ShopifyProduct {
+  id: number;
+  /** 商品名（例: "深呼吸のほうじ茶"）*/
+  name: string;
+  /** Shopify 商品ページ URL */
+  shopifyUrl: string;
+  /** チャットで使う短い紹介文（1〜2文） */
+  description: string;
+  /** 会話のフックになる一言ストーリー */
+  story: string;
+  /** カテゴリ（煎茶/ほうじ茶/玉露/和紅茶/番茶 等） */
+  category: string;
+  /** 産地（未確定なら undefined） */
+  origin?: string;
+  /** 農園（未確定なら undefined） */
+  farm?: string;
+  /** 品種（未確定なら undefined） */
+  cultivar?: string;
+  /** 製法（未確定なら undefined） */
+  processing?: string;
+  /** 味プロファイル（旨味/渋味/苦味/甘味/香ばしさ） */
+  tasteProfile: TasteProfile;
+  /** カフェイン量（ハードガードレール①の判定軸） */
+  caffeineLevel: CaffeineLevel;
+  /** 淹れやすさ（初心者導線④の判定軸） */
+  brewingDifficulty: BrewingDifficulty;
+  /** 合うシーン（朝/仕事の合間/食後/夜/来客 等） */
+  scenes: string[];
+  /** 気分・役割（シャキッと/落ち着き/甘い癒し/特別な時間 等） */
+  moods: string[];
+  /** 飲み方（急須/ティーバッグ/水出し/ミルク・料理 等） */
+  brewingMethods: string[];
+  /** 用途（自分用/ギフト/法人 等） */
+  purposes: string[];
+  /** 詰め合わせセットフラグ（初心者導線④の第一候補判定） */
+  isSet: boolean;
+  /** 定価（円・税込） */
+  price: number;
+  /** セール価格（セール中のみ設定） */
+  salePrice?: number;
+  /** 現在セール中フラグ */
+  onSale: boolean;
+  /** チャットでの優先紹介フラグ */
+  featured: boolean;
+  /** 有効/無効（在庫切れ・取り扱い停止時に false） */
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** ④ 会話ログ: 書き込み用の入力 */
 export interface ConversationLogInput {
   /** セッション/会話単位の識別子（フロント発番 or サーバ発番） */
@@ -82,6 +165,8 @@ export interface ChatDataStore {
   listActiveTopics(): Promise<Topic[]>;
   /** ② 有効な営業ルールを取得（レコメンド判定用） */
   listActiveSalesRules(): Promise<SalesRule[]>;
+  /** ③ 有効・紹介対象の Shopify 商品を取得 */
+  listFeaturedProducts(): Promise<ShopifyProduct[]>;
   /** ④ 会話ログを1件書き込む */
   appendConversationLog(log: ConversationLogInput): Promise<void>;
 
@@ -136,7 +221,7 @@ const SEED_TOPICS: Topic[] = [
 const SEED_SALES_RULES: SalesRule[] = [
   {
     id: 1,
-    keywords: "疲れた,忙しい,休みたい,しんどい",
+    keywords: "疲れた,忙しい,休みたい,しんどい,夜,睡眠,寝たい,リラックス,ほうじ茶",
     recommendProduct: "深呼吸のほうじ茶 (Midnight Roaster)",
     recommendMessage:
       "限界まで焙煎した香ばしさが「心のスイッチをオフにする」感覚を引き出す。ゆっくり深呼吸しながら飲むと効果的。",
@@ -158,6 +243,133 @@ const SEED_SALES_RULES: SalesRule[] = [
   },
 ];
 
+const SEED_PRODUCTS: ShopifyProduct[] = [
+  {
+    id: 1,
+    name: "深呼吸のほうじ茶（Midnight Roaster）",
+    shopifyUrl: "https://tayumano.myshopify.com/products/midnight-roaster",
+    description:
+      "限界まで焙煎した香ばしさが「心のスイッチをオフにする」感覚を引き出す。就寝前や疲れを感じたときに。",
+    story:
+      "限界まで焙煎した香ばしさが『心のスイッチをオフにする』感覚を引き出す。一日の終わりに。",
+    category: "ほうじ茶",
+    // origin / farm / cultivar は藤井さんからの実データ待ち（undefined）
+    processing: "深焙煎",
+    tasteProfile: {
+      umami: "中",
+      astringency: "弱",
+      bitterness: "弱",
+      sweetness: "中",
+      roastiness: "強",
+    },
+    caffeineLevel: "低",
+    brewingDifficulty: "やさしい",
+    scenes: ["夜", "食後", "仕事の合間"],
+    moods: ["落ち着き"],
+    brewingMethods: ["急須", "ティーバッグ"],
+    purposes: ["自分用"],
+    isSet: false,
+    price: 1800,
+    salePrice: 1440,
+    onSale: true,
+    featured: true,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 2,
+    name: "静かなる覚醒の煎茶（Silent Awakening）",
+    shopifyUrl: "https://tayumano.myshopify.com/products/silent-awakening",
+    description:
+      "霧深い山奥のような静かなクリアさをもたらす。無理にテンションを上げずに集中したいときに。",
+    story:
+      "霧深い山奥の情景を思い浮かべるような、研ぎ澄まされた静かな時間。",
+    category: "煎茶",
+    tasteProfile: {
+      umami: "強",
+      astringency: "中",
+      bitterness: "中",
+      sweetness: "弱",
+      roastiness: "弱",
+    },
+    caffeineLevel: "中",
+    brewingDifficulty: "ふつう",
+    scenes: ["朝", "仕事の合間"],
+    moods: ["シャキッと"],
+    brewingMethods: ["急須"],
+    purposes: ["自分用"],
+    isSet: false,
+    price: 2200,
+    onSale: false,
+    featured: true,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 3,
+    name: "水出し煎茶セット（夏季限定）",
+    shopifyUrl: "https://tayumano.myshopify.com/products/cold-brew-set",
+    description:
+      "冷水ポットに入れて一晩冷蔵庫へ。苦味が抑えられ、甘みだけが引き立つ夏の定番。セット内容: 茶葉30g × 3袋。",
+    story:
+      "冷水ポットに入れて一晩冷蔵庫へ。苦味が抑えられ、甘みだけが引き立つ夏の定番。",
+    category: "煎茶",
+    tasteProfile: {
+      umami: "強",
+      astringency: "弱",
+      bitterness: "弱",
+      sweetness: "中",
+      roastiness: "弱",
+    },
+    caffeineLevel: "中",
+    brewingDifficulty: "やさしい",
+    scenes: ["食後", "朝"],
+    moods: ["甘い癒し", "落ち着き"],
+    brewingMethods: ["水出し"],
+    purposes: ["自分用", "ギフト"],
+    isSet: true,
+    price: 2800,
+    salePrice: 2200,
+    onSale: true,
+    featured: true,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 4,
+    name: "煎茶スターターキット",
+    shopifyUrl: "https://tayumano.myshopify.com/products/sencha-starter",
+    description:
+      "急須・茶葉・湯冷まし付きのビギナー向けセット。正しい淹れ方カード同梱。",
+    story:
+      "急須・茶葉・湯冷まし付きのビギナー向けセット。正しい淹れ方カード同梱。",
+    category: "煎茶",
+    tasteProfile: {
+      umami: "中",
+      astringency: "中",
+      bitterness: "中",
+      sweetness: "弱",
+      roastiness: "弱",
+    },
+    caffeineLevel: "中",
+    brewingDifficulty: "やさしい",
+    scenes: ["朝", "食後"],
+    moods: ["特別な時間"],
+    brewingMethods: ["急須"],
+    purposes: ["自分用", "ギフト"],
+    isSet: true,
+    price: 4800,
+    onSale: false,
+    featured: false,
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  },
+];
+
 // ============================================================
 // In-Memory 実装（プロトタイプ用）
 // ============================================================
@@ -172,6 +384,7 @@ const SEED_SALES_RULES: SalesRule[] = [
 class InMemoryDataStore implements ChatDataStore {
   private topics: Topic[] = SEED_TOPICS.map((t) => ({ ...t }));
   private salesRules: SalesRule[] = SEED_SALES_RULES.map((r) => ({ ...r }));
+  private products: ShopifyProduct[] = SEED_PRODUCTS.map((p) => ({ ...p }));
   private nextTopicId = SEED_TOPICS.length + 1;
   private nextRuleId = SEED_SALES_RULES.length + 1;
 
@@ -185,6 +398,10 @@ class InMemoryDataStore implements ChatDataStore {
     return this.salesRules
       .filter((r) => r.enabled)
       .sort((a, b) => a.priority - b.priority);
+  }
+
+  async listFeaturedProducts(): Promise<ShopifyProduct[]> {
+    return this.products.filter((p) => p.enabled && p.featured);
   }
 
   async appendConversationLog(_log: ConversationLogInput): Promise<void> {

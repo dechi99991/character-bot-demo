@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run"
   },
   "dependencies": {
     "@ai-sdk/google": "^1",
     "ai": "^4",
+    "lucide-react": "^1.18.0",
     "next": "^15",
     "react": "^19",
     "react-dom": "^19"
@@ -20,6 +22,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }
