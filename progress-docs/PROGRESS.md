@@ -3,7 +3,7 @@
 ## 進行中
 
 - [ ] **feature/tea-room-ui ブランチ** — commit済み・push ブロック中
-  - `gh auth refresh -s workflow` + `git push` で解消（9コミット分が溜まっている）
+  - `gh auth refresh -s workflow` + `git push` で解消（11コミット分が溜まっている）
   - PR作成は未実施
 
 ---
