@@ -2,23 +2,22 @@
 
 ## 進行中
 
-- [ ] **feature/tea-room-ui ブランチ** — commit済み・push ブロック中
-  - `gh auth refresh -s workflow` + `git push` で解消（11コミット分が溜まっている）
-  - PR作成は未実施
+- [ ] **feature/real-product-data ブランチ** — push済み・PR・mainマージ未実施
+  - テスト（動画録画含む）を次回セッションで実施してからマージ予定
 
 ---
 
 ## TODO
 
-### 直近（feature/tea-room-ui ブランチ）
-- [ ] `gh auth refresh -s workflow` → `git push` → CI確認 → PR作成 → mainマージ
-- [ ] **藤井さんへ `docs/handoff-to-fujii.md` を送付** — 実商品データ入手が最優先
-  - 必要データ: カフェイン量 / 味プロファイル / 正式ShopifyURL / 産地・農園・品種
-- [ ] `ADMIN_PASSWORD` を .env.local / Vercel env に設定（管理API認証有効化）
-- [ ] `.env.local` に `MOCK_CHAT=true` を追加（ローカルモックデモ用）
+### 直近（feature/real-product-data ブランチ）
+- [ ] **動画録画 + 全シナリオテスト** — 次回セッションで実施
+  - テスト対象: こがれ/とこのは/茶のことはじめ/あまもあ/ながとき 各推薦シナリオ
+  - 録画: デモ用GIFまたは動画として保存
+- [ ] PR作成 → CI確認 → mainマージ（テスト合格後）
+- [ ] **正式ShopifyURLを藤井さんから入手して差し替え** — 現在は仮スラッグ
 
-### Phase 2（実商品データ入手後）
-- [ ] **seed商品4点を実データで上書き** — ダミー属性値を実態に置き換え
+### 中期
+- [ ] `ADMIN_PASSWORD` を .env.local / Vercel env に設定（管理API認証有効化）
 - [ ] **`appendConversationLog` の no-op を実装に変える** — 会話ログDB実装（REQ-404）
 - [ ] **モバイルでキャラクターを何かしら表示** — DLSビジュアル納品後にレイアウト確定（REQ-108）
 - [ ] **モック動作中バッジ** — `MOCK_CHAT=true` 時に画面上部に小さく表示（REQ-206）
