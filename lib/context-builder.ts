@@ -106,9 +106,11 @@ function buildProductsSection(products: ShopifyProduct[]): string {
       lines.push(
         `  カフェイン: ${p.caffeineLevel} | 淹れやすさ: ${p.brewingDifficulty}`
       );
-      lines.push(
-        `  味プロファイル: 旨味=${t.umami} 渋味=${t.astringency} 苦味=${t.bitterness} 甘味=${t.sweetness} 香ばしさ=${t.roastiness}`
-      );
+      if (t) {
+        lines.push(
+          `  味プロファイル: 旨味=${t.umami} 渋味=${t.astringency} 苦味=${t.bitterness} 甘味=${t.sweetness} 香ばしさ=${t.roastiness}`
+        );
+      }
       lines.push(`  合うシーン: ${p.scenes.join("・")}`);
       lines.push(`  気分・役割: ${p.moods.join("・")}`);
       lines.push(`  飲み方: ${p.brewingMethods.join("・")}`);
