@@ -25,14 +25,23 @@ describe("mockChat keyword matching", () => {
     expect(text).toContain("クイズ");
   });
 
-  it("寝 → ほうじ茶", async () => {
+  // 夜・睡眠 → カフェイン低の「こがれ」（ほうじ茶）。回帰ガードも兼ねる。
+  it("夜 → こがれ（低カフェイン）", async () => {
     const text = await getResponseText(msg("夜ぐっすり寝たい"));
-    expect(text).toContain("ほうじ茶");
+    expect(text).toContain("こがれ");
+    expect(text).not.toContain("茶のことはじめ");
   });
 
-  it("睡眠 → ほうじ茶", async () => {
+  it("睡眠 → こがれ（旧 featured バグ回帰ガード）", async () => {
     const text = await getResponseText(msg("睡眠に良いお茶は"));
-    expect(text).toContain("ほうじ茶");
+    expect(text).toContain("こがれ");
+    expect(text).not.toContain("茶のことはじめ");
+  });
+
+  it("甘くて渋みのない → あまもあ（バグの本丸・E2E）", async () => {
+    const text = await getResponseText(msg("甘くて渋みのないお茶が飲みたい"));
+    expect(text).toContain("あまもあ");
+    expect(text).not.toContain("茶のことはじめ");
   });
 
   it("煎茶 → brewing variants", async () => {

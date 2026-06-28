@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>tayumano Bot — レコメンド判定フロー</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      mermaid.initialize({ startOnLoad: true, theme: 'base',
+        themeVariables: { fontSize: '14px', fontFamily: 'Hiragino Sans, Meiryo, sans-serif' }
+      });
+    });
+  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Sans", "Meiryo", sans-serif;
+      background: #f8f6f0;
+      padding: 28px 36px 48px;
+    }
+    h1 { font-size: 18px; color: #222; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #999; margin-bottom: 22px; }
+    .chart-wrap {
+      background: white; border-radius: 12px;
+      padding: 28px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px; overflow-x: auto;
+    }
+    .mermaid svg { display: block; margin: 0 auto; }
+    .note {
+      background: #fff3cd; border-left: 4px solid #e6a817;
+      border-radius: 6px; padding: 14px 18px;
+      font-size: 12px; color: #5a4000; line-height: 1.8;
+    }
+    .note strong { color: #333; }
+    code { background: #f0e8c8; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<h1>tayumano Bot — レコメンド判定フロー（現状 5 商品版）</h1>
+<p class="subtitle">
+  優先順位: <strong>① カフェイン除外（最優先）&gt; ② 苦手除外 &gt; ③ 好み必須 &gt; ④ 初心者 &gt; ソフト推薦（シーン・気分）</strong>
+  　※ SalesRule は「補助・従」— ソフト推薦の補強として LLM が参照
+</p>
+
+<div class="chart-wrap">
+<div class="mermaid">
+flowchart LR
+    IN([入力]) --> G1
+
+    G1{"① カフェイン除外\n最優先・安全\n「夜だから」「妊娠中」等"}:::hard
+    G1 -->|カフェイン高・中を除外\n→ 低のみ残る| KOGARE["🍵 こがれ\nほうじ茶 / カフェイン低\n夜・食後向き"]:::prod
+
+    G1 -->|制限なし| G2
+
+    G2{"② 苦手除外\n「渋いの苦手」等\n明示属性指定"}:::hard
+    G2 -->|渋みが苦手\n→ ながとき除外\n残4件でソフト推薦へ| SOFT
+    G2 -->|苦手なし| G3
+
+    G3{"③ 好み必須\n「甘いのが好き」等\n明示スペック指定"}:::hard
+    G3 -->|甘味=強を優先| AMOMOA["🍵 あまもあ\n煎茶 / 甘味=強・渋=弱\nさえあかり品種"]:::prod
+    G3 -->|好み指定なし| G4
+
+    G4{"④ 初心者導線\n「はじめて」\n「どれが良いか迷ってる」"}:::hard
+    G4 -->|あり\n→ セットを第一候補\nシビアを主役にしない| HAJIME["📦 茶のことはじめ\n5種セット / 入門向き\n¥2,780"]:::prod
+    G4 -->|なし| SOFT
+
+    SOFT["ソフト推薦\nシーン・気分が主軸\n（SalesRule は補助・従）"]:::soft
+
+    SOFT -->|"夜 / 疲れ / リラックス\n（SalesRule 補助）"| KOGARE
+    SOFT -->|"朝 / 集中 / シャキッと\n（SalesRule 補助）"| TOKONOHA["🍵 とこのは\n煎茶 / 深蒸し\n朝・集中向き"]:::prod
+    SOFT -->|"来客 / 特別 / ギフト"| NAGATOKI["🍵 ながとき\n煎茶 / 在来100年超\n来客向き・上級者"]:::prod
+    SOFT -->|"甘い癒し\n渋みなし"| AMOMOA
+
+    SOFT -->|"シーン・気分\n未指定"| BUG["⚠️ フォールバック未定義\nLLM が独自判断"]:::bug
+
+    BUG -->|"SalesRule priority=5\n『迷ってる』と誤解釈"| HAJIME
+
+    classDef hard fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+    classDef prod fill:#d1fae5,stroke:#10b981,color:#064e3b,font-weight:bold
+    classDef soft fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef bug  fill:#fee2e2,stroke:#ef4444,color:#7f1d1d
+</div>
+</div>
+
+<div class="note">
+  <strong>⚠️ テスト4 失敗経路（赤）の読み方</strong><br>
+  「甘くて渋みのないお茶が飲みたい」<br>
+  → ① カフェイン制限なし<br>
+  → ② 「渋みなし」は苦手表現だが LLM が ② として検知できなかった（「苦手」という言葉がないため）<br>
+  → ③ 「甘い」は好み必須のはずだが LLM が ③ として検知できなかった<br>
+  → ④ 初心者ではない<br>
+  → ソフト推薦へ：シーン・気分が指定されていないためマッチ不能 → フォールバック<br>
+  → SalesRule priority=5 の「迷ってる」に誤マッチ → <strong>茶のことはじめ（誤）</strong><br><br>
+  <strong>本来は ③ 好み必須で「甘い → あまもあ優先」に進むべきだった。</strong><br>
+  修正A: ① に近い位置で <code>"甘い,渋みない" → あまもあ</code> の SalesRule を追加（最小変更）<br>
+  修正B: ③ の指示を「甘い / 渋みない / 渋くない 等のポジティブ表現も好み指定と解釈せよ」と補足注入
+</div>
+
+</body>
+</html>

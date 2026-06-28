@@ -140,6 +140,11 @@ function buildProductsSection(products: ShopifyProduct[]): string {
 /**
  * CharacterContext から、システムプロンプト末尾に追記する文字列を生成。
  * 注入すべきものが何もなければ空文字を返す。
+ *
+ * 【設計メモ】味属性の強制マッピング（旧 buildGuardrailHintsSection）は廃止した。
+ * 「どの商品を出すか」は lib/recommend.ts の recommend() がサーバー側で決定的に確定し、
+ * chat-handler がその結果を「レコメンド確定」指示として注入する。
+ * ここで商品名をハードコードすると recommend() と二重管理になり発散するため置かない。
  */
 export function buildDynamicSection(context: CharacterContext): string {
   const sections = [

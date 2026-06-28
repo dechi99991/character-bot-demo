@@ -252,6 +252,17 @@ const SEED_SALES_RULES: SalesRule[] = [
     createdAt: now,
     updatedAt: now,
   },
+  {
+    id: 4,
+    keywords: "甘い,甘め,甘さ,渋みなし,渋みない,渋くない,さっぱり,苦くない,あっさり",
+    recommendProduct: "あまもあ",
+    recommendMessage:
+      "さえあかり品種の「あまもあ」は甘味が強く渋味がほとんどない、やわらかい口当たりのお茶。「甘くてすっきり飲みたい」にぴったりの一杯です。",
+    enabled: true,
+    priority: 3,
+    createdAt: now,
+    updatedAt: now,
+  },
 ];
 
 // ※ ShopifyURL は仮スラッグ。藤井さんから正式URL受領後に差し替える。
