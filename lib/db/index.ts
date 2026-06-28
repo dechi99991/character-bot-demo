@@ -43,7 +43,7 @@ export interface SalesRule {
    * 例: "疲れた,忙しい,休みたい"
    */
   keywords: string;
-  /** レコメンドする商品名（例: "Midnight Roaster"） */
+  /** レコメンドする商品名（例: "こがれ"） */
   recommendProduct: string;
   /** レコメンド時のトーク・理由（プロンプトに注入される） */
   recommendMessage: string;
