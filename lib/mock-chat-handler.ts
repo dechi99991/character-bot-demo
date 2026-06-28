@@ -49,7 +49,13 @@ function pickResponse(
   // レコメンド判断は単一の真実 recommend() に委譲（real LLM 経路と同一ロジック）
   const result = recommend(text, products, salesRules);
   if (result) {
-    return formatProductReply(result.product, result.reason);
+    if (result.source === "no-candidate") {
+      // §7-5: 条件に合う商品がない場合は正直に伝える（架空商品を提案しない）
+      return `申し訳ないんだけど、${result.reason} 他に何かご希望を教えてもらえる？`;
+    }
+    if (result.product) {
+      return formatProductReply(result.product, result.reason);
+    }
   }
 
   // キーワード非該当はローテーション

@@ -41,6 +41,28 @@ function extractLastUserText(messages: CoreMessage[]): string {
 }
 
 /**
+ * 直近 n ターンのユーザー発言を結合したテキストを返す。
+ * カフェイン・苦手・属性の安全ガードレール（safetyText）用。
+ * 例:「妊娠中」が3ターン前の発言でも、現ターンの曖昧な入力に安全制約を適用できる。
+ */
+function extractRecentUserText(messages: CoreMessage[], n = 5): string {
+  return messages
+    .filter((m) => m.role === "user")
+    .slice(-n)
+    .map((m) => {
+      if (typeof m.content === "string") return m.content;
+      if (Array.isArray(m.content)) {
+        return m.content
+          .filter((p): p is { type: "text"; text: string } => p.type === "text")
+          .map((p) => p.text)
+          .join("");
+      }
+      return "";
+    })
+    .join("\n");
+}
+
+/**
  * サーバー側で確定したレコメンド結果を、システムプロンプト末尾に
  * 「最優先の確定指示」として注入する文字列を生成する。
  *
@@ -63,6 +85,23 @@ function buildRecommendDirective(productName: string, url: string, reason: strin
     `# チャ・レノンの口調で、この商品だけを自然に1点提案すること。`,
     `# 提案理由の方向性: ${reason}`,
     `# 案内する商品URL: ${url}`,
+  ].join("\n");
+}
+
+/**
+ * 条件に合う商品がない場合（no-candidate）の LLM 指示を生成する。
+ * LLM に「正直に伝えて代替の会話を続けること」を指示する（§7-5 準拠）。
+ */
+function buildNoCandidateDirective(reason: string): string {
+  return [
+    "",
+    "# ============================================================",
+    "# レコメンド: 条件に合う商品なし（正直に伝えること）",
+    "# ============================================================",
+    "# ユーザーの条件（カフェイン・産地・品種・製法）に合う商品が現在ない。",
+    "# 以下の理由をチャ・レノンの口調でやさしく伝え、代わりの提案や質問で会話を続けること:",
+    `# ${reason}`,
+    "# 存在しない商品を架空に作って提案してはいけない。",
   ].join("\n");
 }
 
@@ -117,21 +156,30 @@ export async function handleChat(input: ChatHandlerInput): Promise<Response> {
   // 2-b. レコメンドをサーバー側で決定的に確定し、確定指示を注入する。
   //      LLM にガードレール①〜④を委ねず「出す商品」を固定する（口調のみ LLM 担当）。
   const lastUserText = extractLastUserText(input.messages);
+  // 直近5ターンの発言を安全ガードレール用に結合（カフェイン・苦手・属性をマルチターンで検出）
+  const safetyText = extractRecentUserText(input.messages, 5);
   const recommendation = recommend(
     lastUserText,
     context.products,
-    context.salesRules
+    context.salesRules,
+    safetyText
   );
 
-  const system = recommendation
-    ? baseSystem +
-      "\n" +
-      buildRecommendDirective(
-        recommendation.product.name,
-        recommendation.product.shopifyUrl,
-        recommendation.reason
-      )
-    : baseSystem;
+  let system = baseSystem;
+  if (recommendation) {
+    if (recommendation.source === "no-candidate") {
+      system = baseSystem + "\n" + buildNoCandidateDirective(recommendation.reason);
+    } else if (recommendation.product) {
+      system =
+        baseSystem +
+        "\n" +
+        buildRecommendDirective(
+          recommendation.product.name,
+          recommendation.product.shopifyUrl,
+          recommendation.reason
+        );
+    }
+  }
 
   // 3. LLM 呼び出し + ストリーミング
   const result = streamText({
