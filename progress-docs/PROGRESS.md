@@ -4,6 +4,7 @@
 
 - [ ] **feature/real-product-data ブランチ** — push済み・PR・mainマージ未実施
   - テスト（動画録画含む）を次回セッションで実施してからマージ予定
+  - 2026-06-28②: recommend.ts 全体修正完了（P0バグ・§5-D・safetyText・no-candidate）テスト33件
 
 ---
 
@@ -21,7 +22,7 @@
 - [ ] **`appendConversationLog` の no-op を実装に変える** — 会話ログDB実装（REQ-404）
 - [ ] **モバイルでキャラクターを何かしら表示** — DLSビジュアル納品後にレイアウト確定（REQ-108）
 - [ ] **モック動作中バッジ** — `MOCK_CHAT=true` 時に画面上部に小さく表示（REQ-206）
-- [ ] **コード側カフェインフィルタ** — 二重防御。現状はプロンプト制御のみ（handoff Q1参照）
+- ~~**コード側カフェインフィルタ**~~ ✅ 完了（2026-06-28②、a2c6bf2）recommend.ts §5-A で実装。wantsLow/wantsZero で候補ゼロ → no-candidate 返却、フォールバックなし
 
 ### 中期（寺園さんとの相談）
 - [ ] **ホスティング方針確定** — Vercel継続 or Cloudflare Workers（Q20）
@@ -50,7 +51,8 @@
 
 ## 〇〇待ち
 
-（現時点ではなし）
+- **正式ShopifyURL待ち（藤井さん）** — 解除条件: URL受領後に `lib/db/index.ts` の shopifyUrl を差し替え。現在はプレースホルダー（`tayumano.myshopify.com/products/xxx`）
+- **実ShopifyURL提供まで PR → mainマージを保留** — URL差し替え後に再テストしてマージ
 
 ---
 
