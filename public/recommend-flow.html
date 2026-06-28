@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>tayumano Bot — レコメンド判定フロー</title>
+  <title>tayumano Bot — レコメンドフロー（recommend.ts 実装版）</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       mermaid.initialize({ startOnLoad: true, theme: 'base',
-        themeVariables: { fontSize: '14px', fontFamily: 'Hiragino Sans, Meiryo, sans-serif' }
+        themeVariables: { fontSize: '13px', fontFamily: 'Hiragino Sans, Meiryo, sans-serif' }
       });
     });
   </script>
@@ -19,7 +19,9 @@
       padding: 28px 36px 48px;
     }
     h1 { font-size: 18px; color: #222; margin-bottom: 4px; }
-    .subtitle { font-size: 12px; color: #999; margin-bottom: 22px; }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 6px; }
+    .badge { display: inline-block; font-size: 11px; background: #d1fae5; color: #065f46;
+             border: 1px solid #10b981; border-radius: 4px; padding: 2px 8px; margin-bottom: 20px; }
     .chart-wrap {
       background: white; border-radius: 12px;
       padding: 28px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -27,74 +29,124 @@
     }
     .mermaid svg { display: block; margin: 0 auto; }
     .note {
-      background: #fff3cd; border-left: 4px solid #e6a817;
+      background: #f0fdf4; border-left: 4px solid #10b981;
       border-radius: 6px; padding: 14px 18px;
-      font-size: 12px; color: #5a4000; line-height: 1.8;
+      font-size: 12px; color: #064e3b; line-height: 1.9;
     }
-    .note strong { color: #333; }
-    code { background: #f0e8c8; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+    .note h3 { font-size: 13px; margin-bottom: 8px; color: #065f46; }
+    code { background: #d1fae5; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+    .old-note {
+      background: #fef9c3; border-left: 4px solid #ca8a04;
+      border-radius: 6px; padding: 14px 18px;
+      font-size: 12px; color: #78350f; line-height: 1.9; margin-bottom: 20px;
+    }
+    .old-note h3 { font-size: 13px; margin-bottom: 8px; }
   </style>
 </head>
 <body>
 
-<h1>tayumano Bot — レコメンド判定フロー（現状 5 商品版）</h1>
-<p class="subtitle">
-  優先順位: <strong>① カフェイン除外（最優先）&gt; ② 苦手除外 &gt; ③ 好み必須 &gt; ④ 初心者 &gt; ソフト推薦（シーン・気分）</strong>
-  　※ SalesRule は「補助・従」— ソフト推薦の補強として LLM が参照
-</p>
+<h1>tayumano Bot — レコメンド判定フロー</h1>
+<p class="subtitle">実装: <code>lib/recommend.ts</code> の <code>recommend()</code> 関数（決定的・LLM非依存）</p>
+<span class="badge">✅ recommend.ts 実装版（Test 4 修正済）</span>
 
 <div class="chart-wrap">
 <div class="mermaid">
 flowchart LR
-    IN([入力]) --> G1
+    IN([ユーザー発言]) --> AVAIL
 
-    G1{"① カフェイン除外\n最優先・安全\n「夜だから」「妊娠中」等"}:::hard
-    G1 -->|カフェイン高・中を除外\n→ 低のみ残る| KOGARE["🍵 こがれ\nほうじ茶 / カフェイン低\n夜・食後向き"]:::prod
+    AVAIL{"利用可能な\n商品が存在？"}:::check
+    AVAIL -->|なし| NULL0["null\n（雑談継続）"]:::null
+    AVAIL -->|あり| CAF_INTENT
 
-    G1 -->|制限なし| G2
+    CAF_INTENT["カフェイン意図を検出\n低カフェ: 夜/睡眠/妊娠中 等\nゼロカフェ: ノンカフェイン 等"]:::extract
 
-    G2{"② 苦手除外\n「渋いの苦手」等\n明示属性指定"}:::hard
-    G2 -->|渋みが苦手\n→ ながとき除外\n残4件でソフト推薦へ| SOFT
-    G2 -->|苦手なし| G3
+    CAF_INTENT --> CAMP
 
-    G3{"③ 好み必須\n「甘いのが好き」等\n明示スペック指定"}:::hard
-    G3 -->|甘味=強を優先| AMOMOA["🍵 あまもあ\n煎茶 / 甘味=強・渋=弱\nさえあかり品種"]:::prod
-    G3 -->|好み指定なし| G4
+    CAMP{"0️⃣ キャンペーン\n上書き\nSalesRule\nキーワード一致？"}:::campaign
+    CAMP -->|"一致 かつ\nカフェイン安全"| CAMP_OUT["🎯 該当商品\n（source: campaign）"]:::prod
+    CAMP -->|不一致 / カフェイン不可| CAFF
 
-    G4{"④ 初心者導線\n「はじめて」\n「どれが良いか迷ってる」"}:::hard
-    G4 -->|あり\n→ セットを第一候補\nシビアを主役にしない| HAJIME["📦 茶のことはじめ\n5種セット / 入門向き\n¥2,780"]:::prod
-    G4 -->|なし| SOFT
+    CAFF{"① カフェイン\nハード除外\n制限あり?"}:::hard
+    CAFF -->|"低カフェ限定:\nカフェイン=低・ゼロのみ残す"| CAND1
+    CAFF -->|"ゼロカフェ限定:\nカフェイン=ゼロのみ残す"| CAND1
+    CAFF -->|制限なし| CAND1["候補リスト\n（enabled商品）"]:::stage
 
-    SOFT["ソフト推薦\nシーン・気分が主軸\n（SalesRule は補助・従）"]:::soft
+    CAND1 --> ASTR
 
-    SOFT -->|"夜 / 疲れ / リラックス\n（SalesRule 補助）"| KOGARE
-    SOFT -->|"朝 / 集中 / シャキッと\n（SalesRule 補助）"| TOKONOHA["🍵 とこのは\n煎茶 / 深蒸し\n朝・集中向き"]:::prod
-    SOFT -->|"来客 / 特別 / ギフト"| NAGATOKI["🍵 ながとき\n煎茶 / 在来100年超\n来客向き・上級者"]:::prod
-    SOFT -->|"甘い癒し\n渋みなし"| AMOMOA
+    ASTR{"② 苦手除外\n「渋」+否定語\n共起検出？"}:::hard
+    ASTR -->|"渋みが苦手\n→ 渋味=強を除外"| CAND2
+    ASTR -->|苦手なし| CAND2["残候補"]:::stage
 
-    SOFT -->|"シーン・気分\n未指定"| BUG["⚠️ フォールバック未定義\nLLM が独自判断"]:::bug
+    CAND2 --> BITTER
+    BITTER{"② 苦手除外\n「苦」+否定語\n共起検出？"}:::hard
+    BITTER -->|"苦みが苦手\n→ 苦味=強を除外"| CAND3
+    BITTER -->|苦手なし| CAND3["残候補"]:::stage
 
-    BUG -->|"SalesRule priority=5\n『迷ってる』と誤解釈"| HAJIME
+    CAND3 --> INTENT
 
-    classDef hard fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
-    classDef prod fill:#d1fae5,stroke:#10b981,color:#064e3b,font-weight:bold
-    classDef soft fill:#fef3c7,stroke:#f59e0b,color:#78350f
-    classDef bug  fill:#fee2e2,stroke:#ef4444,color:#7f1d1d
+    INTENT["好み意図を抽出\n甘: /甘/（語幹一致）\n旨み: コク/まろやか 等\n香ばし: 焙煎/ほうじ 等\n初心者: はじめて/迷っ 等"]:::extract
+
+    INTENT --> SCORE
+
+    SCORE["③ スコアリング\n好み一致 +2点\n（渋苦弱の合致 +1点）\nシーン一致 +2点\n気分一致 +2点\n同点 → featured優先（タイブレーク）"]:::soft
+
+    SCORE --> DEC
+
+    DEC{"採否判定"}:::check
+
+    DEC -->|"スコア > 0\nかつ\n好み/シーン/気分が\n何かマッチ"| MATCH_OUT["🍵 最高スコア商品\n（source: taste / scene-mood）"]:::prod
+
+    DEC -->|"スコア = 0\nかつ 初心者意図あり"| BEG
+    BEG{"④ 初心者導線\n詰め合わせセット\nあり?"}:::hard
+    BEG -->|あり| BEG_OUT["📦 茶のことはじめ\n（source: beginner）"]:::prod
+    BEG -->|なし| CAF_ONLY
+
+    DEC -->|"スコア = 0\nかつ カフェイン制約のみ"| CAF_ONLY
+    CAF_ONLY["☕ カフェイン制約内\nの先頭商品\n（source: caffeine）"]:::prod
+
+    DEC -->|"制約もマッチも\n何もなし"| NULL_FINAL["null\n（雑談継続。\n商品を押しつけない）"]:::null
+
+    classDef check  fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef hard   fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a,font-weight:bold
+    classDef soft   fill:#fef9c3,stroke:#ca8a04,color:#78350f
+    classDef prod   fill:#d1fae5,stroke:#10b981,color:#064e3b,font-weight:bold
+    classDef null   fill:#f3f4f6,stroke:#9ca3af,color:#6b7280
+    classDef stage  fill:#f0f9ff,stroke:#7dd3fc,color:#0c4a6e
+    classDef extract fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef campaign fill:#ede9fe,stroke:#7c3aed,color:#2e1065,font-weight:bold
 </div>
+</div>
+
+<div class="old-note">
+  <h3>⚠️ 旧フロー（2026-06-28以前）との主な変更点</h3>
+  「甘くて渋みのないお茶が飲みたい」→ <strong>茶のことはじめ（誤）</strong> になっていた根本原因2件を修正:
+  <br><br>
+  <strong>① featured 一律ボーナスバグ（除去）</strong>
+  — 旧実装では全 featured 商品に +1 を与えており、何もマッチしなくても配列先頭の「茶のことはじめ」がスコア1で常勝していた。
+  <code>featured</code> を同点時のタイブレークのみに降格し、無関係なフォールバックを廃止。<br><br>
+  <strong>② text.includes() の活用形非対応（語幹マッチに置換）</strong>
+  — 旧実装は <code>"甘い".includes("甘くて")</code> 等が false になり SalesRule が発火しなかった。
+  <code>/甘/</code> 語幹マッチ・「渋+否定語共起」判定に切り替え。<br><br>
+  <strong>③ アーキテクチャ改善</strong>
+  — ロジックが プロンプト / mock / SalesRule の3箇所に分裂していたのを <code>recommend()</code> 1関数に集約。
+  LLM は口調のみ担当（商品選択はサーバー確定）。
 </div>
 
 <div class="note">
-  <strong>⚠️ テスト4 失敗経路（赤）の読み方</strong><br>
-  「甘くて渋みのないお茶が飲みたい」<br>
-  → ① カフェイン制限なし<br>
-  → ② 「渋みなし」は苦手表現だが LLM が ② として検知できなかった（「苦手」という言葉がないため）<br>
-  → ③ 「甘い」は好み必須のはずだが LLM が ③ として検知できなかった<br>
-  → ④ 初心者ではない<br>
-  → ソフト推薦へ：シーン・気分が指定されていないためマッチ不能 → フォールバック<br>
-  → SalesRule priority=5 の「迷ってる」に誤マッチ → <strong>茶のことはじめ（誤）</strong><br><br>
-  <strong>本来は ③ 好み必須で「甘い → あまもあ優先」に進むべきだった。</strong><br>
-  修正A: ① に近い位置で <code>"甘い,渋みない" → あまもあ</code> の SalesRule を追加（最小変更）<br>
-  修正B: ③ の指示を「甘い / 渋みない / 渋くない 等のポジティブ表現も好み指定と解釈せよ」と補足注入
+  <h3>📌 現フローのポイント</h3>
+  <strong>優先順位:</strong>
+  0️⃣ キャンペーン上書き（SalesRule） &gt;
+  ① カフェイン除外（ハード） &gt;
+  ② 苦手除外（ハード） &gt;
+  ③ 好み/シーン/気分スコアリング（ソフト） &gt;
+  ④ 初心者セット &gt;
+  ☕ カフェイン制約のみ &gt; null（雑談）
+  <br><br>
+  <strong>SalesRule（キャンペーン）の位置:</strong> ステップ0で最初にチェック。
+  ただしカフェイン安全フィルタは通す。優先度(priority)昇順で最初にマッチしたルールが勝つ。
+  <br><br>
+  <strong>null（商品なし）の条件:</strong> 「お茶のことを話したいだけ」等、
+  制約もマッチも何もない純粋な雑談。押しつけ販売をしない。
 </div>
 
 </body>
